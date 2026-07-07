@@ -294,7 +294,7 @@
   }
   .secondary-btn:hover{background:var(--paper);}
 
-  #pembelianRowsTable input{
+  #pembelianRowsTable input, #penjualanRowsTable input{
     width:100%;
     border:1px solid var(--paper-line);
     border-radius:6px;
@@ -304,12 +304,12 @@
     background:var(--paper);
     color:var(--ink);
   }
-  #pembelianRowsTable input:focus{
+  #pembelianRowsTable input:focus, #penjualanRowsTable input:focus{
     outline:2px solid var(--navy-light);
     outline-offset:1px;
     background:#fff;
   }
-  #pembelianRowsTable td{vertical-align:middle;}
+  #pembelianRowsTable td, #penjualanRowsTable td{vertical-align:middle;}
   #pembelianRowsTable .row-total{
     font-family:'IBM Plex Mono', monospace;
     font-size:12px;
@@ -508,13 +508,28 @@
 
     <div class="card">
       <h3>Catat Penjualan Baru</h3>
-      <form class="entry-form" id="formPenjualan">
-        <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-        <div class="field"><label>Nama Produk</label><input type="text" name="produk" placeholder="cth. Roti coklat" required></div>
-        <div class="field"><label>Jumlah</label><input type="number" step="any" name="jumlah" min="0" required></div>
-        <div class="field"><label>Harga / Satuan (Rp)</label><input type="number" step="any" name="harga" min="0" required></div>
-        <div class="field"><label>Pelanggan (opsional)</label><input type="text" name="pelanggan"></div>
-        <button type="submit">+ Tambah</button>
+      <form id="formPenjualan">
+        <div class="entry-form" style="margin-bottom:16px;">
+          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" id="penjualanTanggal" required></div>
+          <div class="field"><label>Pelanggan (opsional, berlaku utk semua baris)</label><input type="text" name="pelanggan" id="penjualanPelanggan"></div>
+        </div>
+
+        <table id="penjualanRowsTable">
+          <thead>
+            <tr>
+              <th>Nama Produk</th>
+              <th class="num">Jumlah</th>
+              <th class="num">Harga/Satuan (Rp)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="penjualanRows"></tbody>
+        </table>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" id="addPenjualanRow" class="secondary-btn">+ Tambah Baris</button>
+          <button type="submit">Simpan Semua</button>
+        </div>
       </form>
     </div>
 
@@ -751,17 +766,69 @@
     refreshAll();
   });
 
+  // Penjualan: multi-baris dalam satu submit
+  function makePenjualanRow(){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="row-produk" placeholder="cth. Roti coklat"></td>
+      <td><input type="number" step="any" min="0" class="row-jumlah" placeholder="0"></td>
+      <td><input type="number" step="any" min="0" class="row-harga" placeholder="0"></td>
+      <td><button type="button" class="del-btn row-remove">Hapus</button></td>
+    `;
+    tr.querySelector('.row-remove').addEventListener('click', () => {
+      const rows = document.getElementById('penjualanRows');
+      if(rows.children.length > 1) tr.remove();
+    });
+    return tr;
+  }
+
+  document.getElementById('addPenjualanRow').addEventListener('click', () => {
+    document.getElementById('penjualanRows').appendChild(makePenjualanRow());
+  });
+
+  const penjualanRowsBody = document.getElementById('penjualanRows');
+  for(let i = 0; i < 3; i++) penjualanRowsBody.appendChild(makePenjualanRow());
+
   document.getElementById('formPenjualan').addEventListener('submit', e => {
     e.preventDefault();
-    const f = e.target;
-    const jumlah = parseFloat(f.jumlah.value) || 0;
-    const harga = parseFloat(f.harga.value) || 0;
-    const item = {
-      id: uid(), tanggal: f.tanggal.value, produk: f.produk.value,
-      jumlah, harga, total: jumlah * harga, pelanggan: f.pelanggan.value
-    };
-    const data = DB.get(KEYS.jual); data.push(item); DB.set(KEYS.jual, data);
-    f.reset(); refreshAll();
+    const tanggal = document.getElementById('penjualanTanggal').value;
+    const pelanggan = document.getElementById('penjualanPelanggan').value;
+
+    const rows = Array.from(document.querySelectorAll('#penjualanRows tr'));
+    const newItems = [];
+    let skipped = 0;
+
+    rows.forEach(row => {
+      const produk = row.querySelector('.row-produk').value.trim();
+      const jumlah = parseFloat(row.querySelector('.row-jumlah').value) || 0;
+      const harga = parseFloat(row.querySelector('.row-harga').value) || 0;
+
+      if(!produk && !jumlah && !harga) return;
+      if(!produk || !jumlah){ skipped++; return; }
+
+      newItems.push({
+        id: uid(), tanggal, produk, jumlah, harga,
+        total: jumlah * harga, pelanggan
+      });
+    });
+
+    if(newItems.length === 0){
+      alert('Belum ada baris yang terisi lengkap (nama produk dan jumlah wajib diisi).');
+      return;
+    }
+    if(skipped > 0){
+      alert(`${skipped} baris dilewati karena belum lengkap. ${newItems.length} baris berhasil disimpan.`);
+    }
+
+    const data = DB.get(KEYS.jual);
+    newItems.forEach(item => data.push(item));
+    DB.set(KEYS.jual, data);
+
+    penjualanRowsBody.innerHTML = '';
+    for(let i = 0; i < 3; i++) penjualanRowsBody.appendChild(makePenjualanRow());
+    document.getElementById('penjualanPelanggan').value = '';
+
+    refreshAll();
   });
 
   document.getElementById('formProduksi').addEventListener('submit', e => {
