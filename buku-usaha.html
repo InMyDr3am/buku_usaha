@@ -279,6 +279,44 @@
   }
   .entry-form button:hover{background:var(--amber-light);}
 
+  .secondary-btn{
+    background:var(--white);
+    color:var(--navy);
+    border:1px solid var(--navy);
+    border-radius:7px;
+    padding:10px 14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .secondary-btn:hover{background:var(--paper);}
+
+  #pembelianRowsTable input{
+    width:100%;
+    border:1px solid var(--paper-line);
+    border-radius:6px;
+    padding:7px 8px;
+    font-family:inherit;
+    font-size:13px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  #pembelianRowsTable input:focus{
+    outline:2px solid var(--navy-light);
+    outline-offset:1px;
+    background:#fff;
+  }
+  #pembelianRowsTable td{vertical-align:middle;}
+  #pembelianRowsTable .row-total{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+  }
+
   /* tables */
   table{
     width:100%;
@@ -423,14 +461,29 @@
 
     <div class="card">
       <h3>Catat Pembelian Baru</h3>
-      <form class="entry-form" id="formPembelian">
-        <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-        <div class="field"><label>Nama Bahan</label><input type="text" name="bahan" placeholder="cth. Tepung terigu" required></div>
-        <div class="field"><label>Jumlah</label><input type="number" step="any" name="jumlah" min="0" required></div>
-        <div class="field"><label>Satuan</label><input type="text" name="satuan" placeholder="kg / pcs / liter" required></div>
-        <div class="field"><label>Harga / Satuan (Rp)</label><input type="number" step="any" name="harga" min="0" required></div>
-        <div class="field"><label>Supplier (opsional)</label><input type="text" name="supplier"></div>
-        <button type="submit">+ Tambah</button>
+      <form id="formPembelian">
+        <div class="entry-form" style="margin-bottom:16px;">
+          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" id="pembelianTanggal" required></div>
+          <div class="field"><label>Supplier (opsional, berlaku utk semua baris)</label><input type="text" name="supplier" id="pembelianSupplier"></div>
+        </div>
+
+        <table id="pembelianRowsTable">
+          <thead>
+            <tr>
+              <th>Nama Bahan</th>
+              <th class="num">Jumlah</th>
+              <th>Satuan</th>
+              <th class="num">Harga/Satuan (Rp)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="pembelianRows"></tbody>
+        </table>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" id="addPembelianRow" class="secondary-btn">+ Tambah Baris</button>
+          <button type="submit">Simpan Semua</button>
+        </div>
       </form>
     </div>
 
@@ -630,18 +683,72 @@
   }
 
   // ---------- Forms ----------
+
+  // Pembelian: multi-baris dalam satu submit
+  function makePembelianRow(){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="row-bahan" placeholder="cth. Tepung terigu"></td>
+      <td><input type="number" step="any" min="0" class="row-jumlah" placeholder="0"></td>
+      <td><input type="text" class="row-satuan" placeholder="kg / pcs / liter"></td>
+      <td><input type="number" step="any" min="0" class="row-harga" placeholder="0"></td>
+      <td><button type="button" class="del-btn row-remove">Hapus</button></td>
+    `;
+    tr.querySelector('.row-remove').addEventListener('click', () => {
+      const rows = document.getElementById('pembelianRows');
+      if(rows.children.length > 1) tr.remove();
+    });
+    return tr;
+  }
+
+  document.getElementById('addPembelianRow').addEventListener('click', () => {
+    document.getElementById('pembelianRows').appendChild(makePembelianRow());
+  });
+
+  const pembelianRowsBody = document.getElementById('pembelianRows');
+  for(let i = 0; i < 3; i++) pembelianRowsBody.appendChild(makePembelianRow());
+
   document.getElementById('formPembelian').addEventListener('submit', e => {
     e.preventDefault();
-    const f = e.target;
-    const jumlah = parseFloat(f.jumlah.value) || 0;
-    const harga = parseFloat(f.harga.value) || 0;
-    const item = {
-      id: uid(), tanggal: f.tanggal.value, bahan: f.bahan.value,
-      jumlah, satuan: f.satuan.value, harga, total: jumlah * harga,
-      supplier: f.supplier.value
-    };
-    const data = DB.get(KEYS.beli); data.push(item); DB.set(KEYS.beli, data);
-    f.reset(); refreshAll();
+    const tanggal = document.getElementById('pembelianTanggal').value;
+    const supplier = document.getElementById('pembelianSupplier').value;
+
+    const rows = Array.from(document.querySelectorAll('#pembelianRows tr'));
+    const newItems = [];
+    let skipped = 0;
+
+    rows.forEach(row => {
+      const bahan = row.querySelector('.row-bahan').value.trim();
+      const jumlah = parseFloat(row.querySelector('.row-jumlah').value) || 0;
+      const satuan = row.querySelector('.row-satuan').value.trim();
+      const harga = parseFloat(row.querySelector('.row-harga').value) || 0;
+
+      if(!bahan && !jumlah && !satuan && !harga) return;
+      if(!bahan || !jumlah || !satuan){ skipped++; return; }
+
+      newItems.push({
+        id: uid(), tanggal, bahan, jumlah, satuan, harga,
+        total: jumlah * harga, supplier
+      });
+    });
+
+    if(newItems.length === 0){
+      alert('Belum ada baris yang terisi lengkap (nama bahan, jumlah, dan satuan wajib diisi).');
+      return;
+    }
+    if(skipped > 0){
+      alert(`${skipped} baris dilewati karena belum lengkap. ${newItems.length} baris berhasil disimpan.`);
+    }
+
+    const data = DB.get(KEYS.beli);
+    newItems.forEach(item => data.push(item));
+    DB.set(KEYS.beli, data);
+
+    pembelianRowsBody.innerHTML = '';
+    for(let i = 0; i < 3; i++) pembelianRowsBody.appendChild(makePembelianRow());
+    document.getElementById('pembelianSupplier').value = '';
+
+    refreshAll();
   });
 
   document.getElementById('formPenjualan').addEventListener('submit', e => {
