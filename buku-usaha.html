@@ -294,7 +294,7 @@
   }
   .secondary-btn:hover{background:var(--paper);}
 
-  #pembelianRowsTable input, #penjualanRowsTable input{
+  #pembelianRowsTable input, #penjualanRowsTable input, #produksiRowsTable input{
     width:100%;
     border:1px solid var(--paper-line);
     border-radius:6px;
@@ -304,12 +304,12 @@
     background:var(--paper);
     color:var(--ink);
   }
-  #pembelianRowsTable input:focus, #penjualanRowsTable input:focus{
+  #pembelianRowsTable input:focus, #penjualanRowsTable input:focus, #produksiRowsTable input:focus{
     outline:2px solid var(--navy-light);
     outline-offset:1px;
     background:#fff;
   }
-  #pembelianRowsTable td, #penjualanRowsTable td{vertical-align:middle;}
+  #pembelianRowsTable td, #penjualanRowsTable td, #produksiRowsTable td{vertical-align:middle;}
   #pembelianRowsTable .row-total{
     font-family:'IBM Plex Mono', monospace;
     font-size:12px;
@@ -361,6 +361,12 @@
     font-style:italic;
   }
 
+  tr.stok-minus td{
+    background:rgba(168,63,63,0.08);
+    color:var(--danger);
+    font-weight:500;
+  }
+
   /* reports */
   .chart-grid{
     display:grid;
@@ -400,9 +406,10 @@
   <nav id="nav">
     <button data-target="ringkasan" class="active"><span class="num">01</span>Ringkasan</button>
     <button data-target="pembelian"><span class="num">02</span>Pembelian</button>
-    <button data-target="penjualan"><span class="num">03</span>Penjualan</button>
-    <button data-target="produksi"><span class="num">04</span>Produksi</button>
-    <button data-target="laporan"><span class="num">05</span>Laporan</button>
+    <button data-target="stok"><span class="num">03</span>Stok Bahan</button>
+    <button data-target="penjualan"><span class="num">04</span>Penjualan</button>
+    <button data-target="produksi"><span class="num">05</span>Produksi</button>
+    <button data-target="laporan"><span class="num">06</span>Laporan</button>
   </nav>
   <div class="biz-name-wrap">
     <label for="bizName">Nama Usaha</label>
@@ -497,11 +504,33 @@
     </div>
   </section>
 
+  <!-- STOK BAHAN -->
+  <section id="stok">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 03</div>
+        <h2>Stok Bahan Baku</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Posisi Stok Saat Ini</h3>
+      <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-soft);">
+        Dihitung otomatis: <strong>Stok = Total Pembelian − Total Dipakai Produksi</strong>. Baris merah artinya stok minus (dipakai lebih banyak dari yang dibeli — cek kembali catatanmu).
+      </p>
+      <table>
+        <thead><tr><th>Nama Bahan</th><th>Satuan</th><th class="num">Total Masuk (Beli)</th><th class="num">Total Keluar (Produksi)</th><th class="num">Stok Saat Ini</th></tr></thead>
+        <tbody id="stokBody"></tbody>
+      </table>
+      <div class="empty" id="stokEmpty" style="display:none;">Belum ada data bahan. Catat pembelian dulu di Modul 02.</div>
+    </div>
+  </section>
+
   <!-- PENJUALAN -->
   <section id="penjualan">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 03</div>
+        <div class="eyebrow">Modul 04</div>
         <h2>Penjualan</h2>
       </div>
     </div>
@@ -547,20 +576,37 @@
   <section id="produksi">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 04</div>
+        <div class="eyebrow">Modul 05</div>
         <h2>Produksi</h2>
       </div>
     </div>
 
     <div class="card">
       <h3>Catat Produksi Baru</h3>
-      <form class="entry-form" id="formProduksi">
-        <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
-        <div class="field"><label>Nama Produk</label><input type="text" name="produk" placeholder="cth. Roti coklat" required></div>
-        <div class="field"><label>Jumlah Diproduksi</label><input type="number" step="any" name="jumlah" min="0" required></div>
-        <div class="field"><label>Bahan Dipakai (opsional)</label><input type="text" name="bahan" placeholder="cth. Tepung 5kg, gula 1kg"></div>
-        <div class="field"><label>Catatan</label><input type="text" name="catatan"></div>
-        <button type="submit">+ Tambah</button>
+      <form id="formProduksi">
+        <div class="entry-form" style="margin-bottom:16px;">
+          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" id="produksiTanggal" required></div>
+          <div class="field"><label>Nama Produk</label><input type="text" name="produk" id="produksiProduk" placeholder="cth. Roti coklat" required></div>
+          <div class="field"><label>Jumlah Diproduksi</label><input type="number" step="any" name="jumlah" id="produksiJumlah" min="0" required></div>
+          <div class="field"><label>Catatan (opsional)</label><input type="text" name="catatan" id="produksiCatatan"></div>
+        </div>
+
+        <label style="font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:8px;">Bahan Baku yang Dipakai (opsional)</label>
+        <table id="produksiRowsTable">
+          <thead>
+            <tr>
+              <th>Nama Bahan</th>
+              <th class="num">Jumlah Dipakai</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="produksiRows"></tbody>
+        </table>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" id="addProduksiRow" class="secondary-btn">+ Tambah Bahan</button>
+          <button type="submit">Simpan Produksi</button>
+        </div>
       </form>
     </div>
 
@@ -578,7 +624,7 @@
   <section id="laporan">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 05</div>
+        <div class="eyebrow">Modul 06</div>
         <h2>Laporan &amp; Ringkasan</h2>
       </div>
     </div>
@@ -604,6 +650,8 @@
   </section>
 
 </main>
+
+<datalist id="bahanDatalist"></datalist>
 
 <script>
   // ---------- DB helpers ----------
@@ -683,14 +731,19 @@
   }
 
   function renderProduksi(){
-    renderTable(KEYS.produksi, 'produksiBody', 'produksiEmpty', null, item => `
+    renderTable(KEYS.produksi, 'produksiBody', 'produksiEmpty', null, item => {
+      const bahanList = (item.bahanDipakai && item.bahanDipakai.length)
+        ? item.bahanDipakai.map(b => `${escapeHtml(b.bahan)} (${b.jumlah})`).join(', ')
+        : '—';
+      return `
       <td>${item.tanggal}</td>
       <td>${escapeHtml(item.produk)}</td>
       <td class="num">${item.jumlah}</td>
-      <td>${escapeHtml(item.bahan || '—')}</td>
+      <td>${bahanList}</td>
       <td>${escapeHtml(item.catatan || '—')}</td>
       <td><button class="del-btn" data-id="${item.id}">Hapus</button></td>
-    `);
+    `;
+    });
   }
 
   function escapeHtml(str){
@@ -703,7 +756,7 @@
   function makePembelianRow(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" class="row-bahan" placeholder="cth. Tepung terigu"></td>
+      <td><input type="text" class="row-bahan" list="bahanDatalist" placeholder="cth. Tepung terigu"></td>
       <td><input type="number" step="any" min="0" class="row-jumlah" placeholder="0"></td>
       <td><input type="text" class="row-satuan" placeholder="kg / pcs / liter"></td>
       <td><input type="number" step="any" min="0" class="row-harga" placeholder="0"></td>
@@ -831,15 +884,66 @@
     refreshAll();
   });
 
+  // Produksi: bahan baku dipakai bisa multi-baris, otomatis pengaruhi stok
+  function makeProduksiRow(){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="row-bahan" list="bahanDatalist" placeholder="cth. Tepung terigu"></td>
+      <td><input type="number" step="any" min="0" class="row-jumlah" placeholder="0"></td>
+      <td><button type="button" class="del-btn row-remove">Hapus</button></td>
+    `;
+    tr.querySelector('.row-remove').addEventListener('click', () => {
+      const rows = document.getElementById('produksiRows');
+      if(rows.children.length > 1) tr.remove();
+    });
+    return tr;
+  }
+
+  document.getElementById('addProduksiRow').addEventListener('click', () => {
+    document.getElementById('produksiRows').appendChild(makeProduksiRow());
+  });
+
+  const produksiRowsBody = document.getElementById('produksiRows');
+  for(let i = 0; i < 2; i++) produksiRowsBody.appendChild(makeProduksiRow());
+
   document.getElementById('formProduksi').addEventListener('submit', e => {
     e.preventDefault();
-    const f = e.target;
-    const item = {
-      id: uid(), tanggal: f.tanggal.value, produk: f.produk.value,
-      jumlah: parseFloat(f.jumlah.value) || 0, bahan: f.bahan.value, catatan: f.catatan.value
-    };
+    const tanggal = document.getElementById('produksiTanggal').value;
+    const produk = document.getElementById('produksiProduk').value.trim();
+    const jumlah = parseFloat(document.getElementById('produksiJumlah').value) || 0;
+    const catatan = document.getElementById('produksiCatatan').value;
+
+    const rows = Array.from(document.querySelectorAll('#produksiRows tr'));
+    const bahanDipakai = [];
+    rows.forEach(row => {
+      const bahan = row.querySelector('.row-bahan').value.trim();
+      const jml = parseFloat(row.querySelector('.row-jumlah').value) || 0;
+      if(!bahan || !jml) return;
+      bahanDipakai.push({ bahan, jumlah: jml });
+    });
+
+    // cek kecukupan stok, beri peringatan (tidak memblokir)
+    const stok = computeStok();
+    const kurang = bahanDipakai.filter(b => {
+      const s = stok[b.bahan.toLowerCase()];
+      const tersedia = s ? s.stok : 0;
+      return b.jumlah > tersedia;
+    });
+    if(kurang.length > 0){
+      const pesan = kurang.map(b => `- ${b.bahan} (dipakai ${b.jumlah}, stok tersedia ${(stok[b.bahan.toLowerCase()]?.stok || 0)})`).join('\n');
+      const lanjut = confirm(`Stok bahan berikut tidak cukup:\n${pesan}\n\nTetap simpan produksi ini? (Stok akan menjadi minus)`);
+      if(!lanjut) return;
+    }
+
+    const item = { id: uid(), tanggal, produk, jumlah, bahanDipakai, catatan };
     const data = DB.get(KEYS.produksi); data.push(item); DB.set(KEYS.produksi, data);
-    f.reset(); refreshAll();
+
+    document.getElementById('formProduksi').reset();
+    document.getElementById('produksiTanggal').value = todayISO();
+    produksiRowsBody.innerHTML = '';
+    for(let i = 0; i < 2; i++) produksiRowsBody.appendChild(makeProduksiRow());
+
+    refreshAll();
   });
 
   // default today's date on all date inputs
@@ -950,10 +1054,65 @@
     }
   }
 
+  // ---------- Stok Bahan ----------
+  // Kunci internal pakai nama bahan huruf kecil (trim) supaya "Tepung" dan "tepung" dianggap sama.
+  function computeStok(){
+    const beli = DB.get(KEYS.beli);
+    const produksi = DB.get(KEYS.produksi);
+    const stok = {}; // key: lowercase bahan -> { nama, satuan, masuk, keluar, stok }
+
+    beli.forEach(x => {
+      const key = (x.bahan || '').trim().toLowerCase();
+      if(!key) return;
+      if(!stok[key]) stok[key] = { nama: x.bahan.trim(), satuan: x.satuan || '', masuk: 0, keluar: 0 };
+      stok[key].masuk += x.jumlah;
+      if(x.satuan) stok[key].satuan = x.satuan;
+    });
+
+    produksi.forEach(p => {
+      (p.bahanDipakai || []).forEach(b => {
+        const key = (b.bahan || '').trim().toLowerCase();
+        if(!key) return;
+        if(!stok[key]) stok[key] = { nama: b.bahan.trim(), satuan: '', masuk: 0, keluar: 0 };
+        stok[key].keluar += b.jumlah;
+      });
+    });
+
+    Object.values(stok).forEach(s => { s.stok = s.masuk - s.keluar; });
+    return stok;
+  }
+
+  function renderStok(){
+    const stok = computeStok();
+    const rows = Object.values(stok).sort((a,b) => a.nama.localeCompare(b.nama));
+    const tbody = document.getElementById('stokBody');
+    const empty = document.getElementById('stokEmpty');
+    tbody.innerHTML = '';
+    if(rows.length === 0){ empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    rows.forEach(s => {
+      const tr = document.createElement('tr');
+      if(s.stok < 0) tr.classList.add('stok-minus');
+      tr.innerHTML = `
+        <td>${escapeHtml(s.nama)}</td>
+        <td>${escapeHtml(s.satuan || '—')}</td>
+        <td class="num">${s.masuk.toLocaleString('id-ID')}</td>
+        <td class="num">${s.keluar.toLocaleString('id-ID')}</td>
+        <td class="num">${s.stok.toLocaleString('id-ID')}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // update datalist untuk autocomplete nama bahan
+    const datalist = document.getElementById('bahanDatalist');
+    datalist.innerHTML = rows.map(s => `<option value="${escapeHtml(s.nama)}">`).join('');
+  }
+
   function refreshAll(){
     renderPembelian();
     renderPenjualan();
     renderProduksi();
+    renderStok();
     renderRingkasan();
   }
 
