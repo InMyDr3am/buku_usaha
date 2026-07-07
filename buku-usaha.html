@@ -405,11 +405,12 @@
   </div>
   <nav id="nav">
     <button data-target="ringkasan" class="active"><span class="num">01</span>Ringkasan</button>
-    <button data-target="pembelian"><span class="num">02</span>Pembelian</button>
-    <button data-target="stok"><span class="num">03</span>Stok Bahan</button>
-    <button data-target="penjualan"><span class="num">04</span>Penjualan</button>
-    <button data-target="produksi"><span class="num">05</span>Produksi</button>
-    <button data-target="laporan"><span class="num">06</span>Laporan</button>
+    <button data-target="produk"><span class="num">02</span>Kelola Produk</button>
+    <button data-target="pembelian"><span class="num">03</span>Pembelian</button>
+    <button data-target="stok"><span class="num">04</span>Stok Bahan</button>
+    <button data-target="penjualan"><span class="num">05</span>Penjualan</button>
+    <button data-target="produksi"><span class="num">06</span>Produksi</button>
+    <button data-target="laporan"><span class="num">07</span>Laporan</button>
   </nav>
   <div class="biz-name-wrap">
     <label for="bizName">Nama Usaha</label>
@@ -457,11 +458,43 @@
     </div>
   </section>
 
+  <!-- KELOLA PRODUK -->
+  <section id="produk">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 02</div>
+        <h2>Kelola Produk</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Tambah Produk</h3>
+      <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-soft);">
+        Daftarkan produk di sini supaya bisa langsung dipilih saat mencatat Penjualan atau Produksi. Tidak wajib — kalau kamu langsung ketik nama produk baru di form Penjualan/Produksi, produk itu otomatis masuk ke daftar ini juga.
+      </p>
+      <form class="entry-form" id="formProduk">
+        <div class="field"><label>Nama Produk</label><input type="text" name="nama" placeholder="cth. Roti coklat" required></div>
+        <div class="field"><label>Harga Jual Default (opsional)</label><input type="number" step="any" min="0" name="harga" placeholder="0"></div>
+        <div class="field"><label>Satuan (opsional)</label><input type="text" name="satuan" placeholder="pcs / box / kg"></div>
+        <button type="submit">+ Tambah</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Daftar Produk</h3>
+      <table>
+        <thead><tr><th>Nama Produk</th><th class="num">Harga Jual Default</th><th>Satuan</th><th></th></tr></thead>
+        <tbody id="produkBody"></tbody>
+      </table>
+      <div class="empty" id="produkEmpty" style="display:none;">Belum ada produk terdaftar.</div>
+    </div>
+  </section>
+
   <!-- PEMBELIAN -->
   <section id="pembelian">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 02</div>
+        <div class="eyebrow">Modul 03</div>
         <h2>Pembelian &amp; Stok Bahan</h2>
       </div>
     </div>
@@ -508,7 +541,7 @@
   <section id="stok">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 03</div>
+        <div class="eyebrow">Modul 04</div>
         <h2>Stok Bahan Baku</h2>
       </div>
     </div>
@@ -522,7 +555,7 @@
         <thead><tr><th>Nama Bahan</th><th>Satuan</th><th class="num">Total Masuk (Beli)</th><th class="num">Total Keluar (Produksi)</th><th class="num">Stok Saat Ini</th></tr></thead>
         <tbody id="stokBody"></tbody>
       </table>
-      <div class="empty" id="stokEmpty" style="display:none;">Belum ada data bahan. Catat pembelian dulu di Modul 02.</div>
+      <div class="empty" id="stokEmpty" style="display:none;">Belum ada data bahan. Catat pembelian dulu di Modul 03.</div>
     </div>
   </section>
 
@@ -530,7 +563,7 @@
   <section id="penjualan">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 04</div>
+        <div class="eyebrow">Modul 05</div>
         <h2>Penjualan</h2>
       </div>
     </div>
@@ -576,7 +609,7 @@
   <section id="produksi">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 05</div>
+        <div class="eyebrow">Modul 06</div>
         <h2>Produksi</h2>
       </div>
     </div>
@@ -586,7 +619,7 @@
       <form id="formProduksi">
         <div class="entry-form" style="margin-bottom:16px;">
           <div class="field"><label>Tanggal</label><input type="date" name="tanggal" id="produksiTanggal" required></div>
-          <div class="field"><label>Nama Produk</label><input type="text" name="produk" id="produksiProduk" placeholder="cth. Roti coklat" required></div>
+          <div class="field"><label>Nama Produk</label><input type="text" name="produk" id="produksiProduk" list="produkDatalist" placeholder="cth. Roti coklat" required></div>
           <div class="field"><label>Jumlah Diproduksi</label><input type="number" step="any" name="jumlah" id="produksiJumlah" min="0" required></div>
           <div class="field"><label>Catatan (opsional)</label><input type="text" name="catatan" id="produksiCatatan"></div>
         </div>
@@ -624,7 +657,7 @@
   <section id="laporan">
     <div class="section-head">
       <div>
-        <div class="eyebrow">Modul 06</div>
+        <div class="eyebrow">Modul 07</div>
         <h2>Laporan &amp; Ringkasan</h2>
       </div>
     </div>
@@ -652,6 +685,7 @@
 </main>
 
 <datalist id="bahanDatalist"></datalist>
+<datalist id="produkDatalist"></datalist>
 
 <script>
   // ---------- DB helpers ----------
@@ -659,7 +693,7 @@
     get(key){ try{ return JSON.parse(localStorage.getItem(key)) || []; }catch(e){ return []; } },
     set(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
   };
-  const KEYS = { beli:'buku_usaha_pembelian', jual:'buku_usaha_penjualan', produksi:'buku_usaha_produksi' };
+  const KEYS = { beli:'buku_usaha_pembelian', jual:'buku_usaha_penjualan', produksi:'buku_usaha_produksi', produk:'buku_usaha_produk' };
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
   function rupiah(n){ return 'Rp ' + Number(n||0).toLocaleString('id-ID'); }
@@ -750,6 +784,55 @@
     return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 
+  // ---------- Kelola Produk ----------
+  function findProduk(nama){
+    const key = (nama || '').trim().toLowerCase();
+    if(!key) return null;
+    return DB.get(KEYS.produk).find(p => p.nama.trim().toLowerCase() === key) || null;
+  }
+
+  // Daftarkan produk baru jika belum ada di katalog (dipanggil otomatis dari Penjualan/Produksi)
+  function ensureProdukTerdaftar(nama, hargaDefault){
+    const trimmed = (nama || '').trim();
+    if(!trimmed) return;
+    if(findProduk(trimmed)) return;
+    const data = DB.get(KEYS.produk);
+    data.push({ id: uid(), nama: trimmed, harga: hargaDefault || 0, satuan: '' });
+    DB.set(KEYS.produk, data);
+  }
+
+  function renderProdukList(){
+    renderTable(KEYS.produk, 'produkBody', 'produkEmpty', null, item => `
+      <td>${escapeHtml(item.nama)}</td>
+      <td class="num">${item.harga ? rupiah(item.harga) : '—'}</td>
+      <td>${escapeHtml(item.satuan || '—')}</td>
+      <td><button class="del-btn" data-id="${item.id}">Hapus</button></td>
+    `);
+  }
+
+  document.getElementById('formProduk').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    const nama = f.nama.value.trim();
+    if(!nama) return;
+    if(findProduk(nama)){
+      alert('Produk dengan nama ini sudah terdaftar.');
+      return;
+    }
+    const item = {
+      id: uid(), nama,
+      harga: parseFloat(f.harga.value) || 0,
+      satuan: f.satuan.value.trim()
+    };
+    const data = DB.get(KEYS.produk); data.push(item); DB.set(KEYS.produk, data);
+    f.reset(); refreshAll();
+  });
+
+  function renderProdukDatalist(){
+    const produkList = DB.get(KEYS.produk).slice().sort((a,b) => a.nama.localeCompare(b.nama));
+    document.getElementById('produkDatalist').innerHTML = produkList.map(p => `<option value="${escapeHtml(p.nama)}">`).join('');
+  }
+
   // ---------- Forms ----------
 
   // Pembelian: multi-baris dalam satu submit
@@ -823,7 +906,7 @@
   function makePenjualanRow(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" class="row-produk" placeholder="cth. Roti coklat"></td>
+      <td><input type="text" class="row-produk" list="produkDatalist" placeholder="cth. Roti coklat"></td>
       <td><input type="number" step="any" min="0" class="row-jumlah" placeholder="0"></td>
       <td><input type="number" step="any" min="0" class="row-harga" placeholder="0"></td>
       <td><button type="button" class="del-btn row-remove">Hapus</button></td>
@@ -831,6 +914,14 @@
     tr.querySelector('.row-remove').addEventListener('click', () => {
       const rows = document.getElementById('penjualanRows');
       if(rows.children.length > 1) tr.remove();
+    });
+    // saat pilih/ketik nama produk yang sudah terdaftar, isi otomatis harga jual default (kalau harga masih kosong)
+    tr.querySelector('.row-produk').addEventListener('change', (e) => {
+      const p = findProduk(e.target.value);
+      const hargaField = tr.querySelector('.row-harga');
+      if(p && p.harga && !hargaField.value){
+        hargaField.value = p.harga;
+      }
     });
     return tr;
   }
@@ -874,7 +965,10 @@
     }
 
     const data = DB.get(KEYS.jual);
-    newItems.forEach(item => data.push(item));
+    newItems.forEach(item => {
+      data.push(item);
+      ensureProdukTerdaftar(item.produk, item.harga);
+    });
     DB.set(KEYS.jual, data);
 
     penjualanRowsBody.innerHTML = '';
@@ -937,6 +1031,7 @@
 
     const item = { id: uid(), tanggal, produk, jumlah, bahanDipakai, catatan };
     const data = DB.get(KEYS.produksi); data.push(item); DB.set(KEYS.produksi, data);
+    ensureProdukTerdaftar(produk, 0);
 
     document.getElementById('formProduksi').reset();
     document.getElementById('produksiTanggal').value = todayISO();
@@ -1109,6 +1204,8 @@
   }
 
   function refreshAll(){
+    renderProdukList();
+    renderProdukDatalist();
     renderPembelian();
     renderPenjualan();
     renderProduksi();
