@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Usaha — Pengelolaan Data Internal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper: #f6f1e6;
+    --paper-line: #e2d7bd;
+    --white: #fffdf8;
+    --ink: #1d2430;
+    --ink-soft: #5c6472;
+    --navy: #223148;
+    --navy-light: #3d5372;
+    --amber: #c8871e;
+    --amber-light: #e0a94a;
+    --danger: #a83f3f;
+    --green: #3f6b4a;
+    --radius: 10px;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(to bottom, transparent, transparent 37px, var(--paper-line) 38px),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Inter', system-ui, sans-serif;
+    font-size:14px;
+    display:flex;
+    min-height:100vh;
+  }
+
+  h1,h2,h3{
+    font-family:'Source Serif 4', Georgia, serif;
+    margin:0;
+  }
+
+  .mono{font-family:'IBM Plex Mono', 'Courier New', monospace;}
+
+  /* ---------- SIDEBAR ---------- */
+  aside{
+    width:220px;
+    flex-shrink:0;
+    background:var(--navy);
+    color:var(--white);
+    padding:26px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+
+  .logo{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+
+  .logo .mark{
+    color:var(--amber-light);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+  }
+
+  .logo h1{
+    font-size:19px;
+    letter-spacing:-0.01em;
+  }
+
+  nav{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  nav button{
+    all:unset;
+    cursor:pointer;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:13.5px;
+    color:rgba(255,255,255,0.72);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+
+  nav button .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--amber-light);
+    width:18px;
+  }
+
+  nav button:hover{
+    background:rgba(255,255,255,0.06);
+    color:#fff;
+  }
+
+  nav button.active{
+    background:var(--navy-light);
+    color:#fff;
+  }
+
+  .biz-name-wrap{
+    margin-top:auto;
+    border-top:1px solid rgba(255,255,255,0.14);
+    padding-top:16px;
+  }
+
+  .biz-name-wrap label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:rgba(255,255,255,0.5);
+  }
+
+  #bizName{
+    all:unset;
+    display:block;
+    width:100%;
+    font-family:'Source Serif 4', serif;
+    font-size:15px;
+    color:#fff;
+    padding:6px 0;
+    border-bottom:1px solid rgba(255,255,255,0.2);
+  }
+
+  /* ---------- MAIN ---------- */
+  main{
+    flex:1;
+    padding:30px 40px 60px;
+    max-width:1100px;
+  }
+
+  section{display:none;}
+  section.active{display:block; animation:fade 0.2s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:20px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+  }
+
+  .section-head .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--amber);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
+
+  .section-head h2{font-size:26px; margin-top:2px;}
+
+  .today{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+
+  /* stat cards */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:14px;
+    margin-bottom:28px;
+  }
+
+  .stat-card{
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .stat-card::before{
+    content:'';
+    position:absolute; left:0; top:0; bottom:0;
+    width:4px;
+    background:var(--amber);
+  }
+
+  .stat-card .label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+  }
+
+  .stat-card .value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    font-weight:500;
+    margin-top:6px;
+    color:var(--navy);
+  }
+
+  .stat-card.warn::before{background:var(--danger);}
+  .stat-card.good::before{background:var(--green);}
+
+  /* forms */
+  .card{
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    margin-bottom:24px;
+  }
+
+  .card h3{
+    font-size:15px;
+    margin-bottom:14px;
+    color:var(--navy);
+  }
+
+  form.entry-form{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+    gap:12px;
+    align-items:end;
+  }
+
+  .field{display:flex; flex-direction:column; gap:5px;}
+
+  .field label{
+    font-size:11px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+
+  .field input{
+    border:1px solid var(--paper-line);
+    border-radius:7px;
+    padding:9px 10px;
+    font-family:inherit;
+    font-size:13.5px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+
+  .field input:focus{
+    outline:2px solid var(--navy-light);
+    outline-offset:1px;
+    background:#fff;
+  }
+
+  .entry-form button{
+    grid-column:span 1;
+    background:var(--amber);
+    color:#fff;
+    border:none;
+    border-radius:7px;
+    padding:10px 14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    cursor:pointer;
+    height:38px;
+    transition:background 0.15s ease;
+  }
+  .entry-form button:hover{background:var(--amber-light);}
+
+  /* tables */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+
+  thead th{
+    text-align:left;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--ink);
+    padding:8px 10px;
+  }
+
+  tbody td{
+    padding:9px 10px;
+    border-bottom:1px solid var(--paper-line);
+  }
+
+  tbody tr:hover{background:rgba(200,135,30,0.06);}
+
+  td.num, th.num{text-align:right; font-family:'IBM Plex Mono', monospace;}
+
+  .del-btn{
+    all:unset;
+    cursor:pointer;
+    color:var(--danger);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+  }
+  .del-btn:hover{text-decoration:underline;}
+
+  .empty{
+    padding:22px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-style:italic;
+  }
+
+  /* reports */
+  .chart-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+
+  .chart-card{
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius);
+    padding:18px;
+  }
+
+  .chart-card h3{font-size:14px; margin-bottom:12px; color:var(--navy);}
+
+  canvas{max-height:260px;}
+
+  @media (max-width:880px){
+    body{flex-direction:column;}
+    aside{width:100%; height:auto; position:relative; flex-direction:row; align-items:center; gap:14px; overflow-x:auto;}
+    .biz-name-wrap{display:none;}
+    nav{flex-direction:row;}
+    main{padding:20px;}
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .chart-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<aside>
+  <div class="logo">
+    <span class="mark">§</span>
+    <h1>Buku Usaha</h1>
+  </div>
+  <nav id="nav">
+    <button data-target="ringkasan" class="active"><span class="num">01</span>Ringkasan</button>
+    <button data-target="pembelian"><span class="num">02</span>Pembelian</button>
+    <button data-target="penjualan"><span class="num">03</span>Penjualan</button>
+    <button data-target="produksi"><span class="num">04</span>Produksi</button>
+    <button data-target="laporan"><span class="num">05</span>Laporan</button>
+  </nav>
+  <div class="biz-name-wrap">
+    <label for="bizName">Nama Usaha</label>
+    <input id="bizName" value="Usaha Saya" />
+  </div>
+</aside>
+
+<main>
+
+  <!-- RINGKASAN -->
+  <section id="ringkasan" class="active">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Dashboard</div>
+        <h2>Ringkasan Usaha</h2>
+      </div>
+      <div class="today mono" id="todayLabel"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card good">
+        <div class="label">Total Penjualan</div>
+        <div class="value mono" id="statPenjualan">Rp 0</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="label">Total Pembelian</div>
+        <div class="value mono" id="statPembelian">Rp 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Laba Kotor (est.)</div>
+        <div class="value mono" id="statLaba">Rp 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Unit Produksi</div>
+        <div class="value mono" id="statProduksi">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Aktivitas Terbaru</h3>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th class="num">Nilai</th></tr></thead>
+        <tbody id="recentBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PEMBELIAN -->
+  <section id="pembelian">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 02</div>
+        <h2>Pembelian &amp; Stok Bahan</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Catat Pembelian Baru</h3>
+      <form class="entry-form" id="formPembelian">
+        <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
+        <div class="field"><label>Nama Bahan</label><input type="text" name="bahan" placeholder="cth. Tepung terigu" required></div>
+        <div class="field"><label>Jumlah</label><input type="number" step="any" name="jumlah" min="0" required></div>
+        <div class="field"><label>Satuan</label><input type="text" name="satuan" placeholder="kg / pcs / liter" required></div>
+        <div class="field"><label>Harga / Satuan (Rp)</label><input type="number" step="any" name="harga" min="0" required></div>
+        <div class="field"><label>Supplier (opsional)</label><input type="text" name="supplier"></div>
+        <button type="submit">+ Tambah</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Riwayat Pembelian</h3>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Bahan</th><th class="num">Jumlah</th><th class="num">Harga/Satuan</th><th class="num">Total</th><th>Supplier</th><th></th></tr></thead>
+        <tbody id="pembelianBody"></tbody>
+      </table>
+      <div class="empty" id="pembelianEmpty" style="display:none;">Belum ada data pembelian.</div>
+    </div>
+  </section>
+
+  <!-- PENJUALAN -->
+  <section id="penjualan">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 03</div>
+        <h2>Penjualan</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Catat Penjualan Baru</h3>
+      <form class="entry-form" id="formPenjualan">
+        <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
+        <div class="field"><label>Nama Produk</label><input type="text" name="produk" placeholder="cth. Roti coklat" required></div>
+        <div class="field"><label>Jumlah</label><input type="number" step="any" name="jumlah" min="0" required></div>
+        <div class="field"><label>Harga / Satuan (Rp)</label><input type="number" step="any" name="harga" min="0" required></div>
+        <div class="field"><label>Pelanggan (opsional)</label><input type="text" name="pelanggan"></div>
+        <button type="submit">+ Tambah</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Riwayat Penjualan</h3>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Produk</th><th class="num">Jumlah</th><th class="num">Harga/Satuan</th><th class="num">Total</th><th>Pelanggan</th><th></th></tr></thead>
+        <tbody id="penjualanBody"></tbody>
+      </table>
+      <div class="empty" id="penjualanEmpty" style="display:none;">Belum ada data penjualan.</div>
+    </div>
+  </section>
+
+  <!-- PRODUKSI -->
+  <section id="produksi">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 04</div>
+        <h2>Produksi</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Catat Produksi Baru</h3>
+      <form class="entry-form" id="formProduksi">
+        <div class="field"><label>Tanggal</label><input type="date" name="tanggal" required></div>
+        <div class="field"><label>Nama Produk</label><input type="text" name="produk" placeholder="cth. Roti coklat" required></div>
+        <div class="field"><label>Jumlah Diproduksi</label><input type="number" step="any" name="jumlah" min="0" required></div>
+        <div class="field"><label>Bahan Dipakai (opsional)</label><input type="text" name="bahan" placeholder="cth. Tepung 5kg, gula 1kg"></div>
+        <div class="field"><label>Catatan</label><input type="text" name="catatan"></div>
+        <button type="submit">+ Tambah</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Riwayat Produksi</h3>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Produk</th><th class="num">Jumlah</th><th>Bahan Dipakai</th><th>Catatan</th><th></th></tr></thead>
+        <tbody id="produksiBody"></tbody>
+      </table>
+      <div class="empty" id="produksiEmpty" style="display:none;">Belum ada data produksi.</div>
+    </div>
+  </section>
+
+  <!-- LAPORAN -->
+  <section id="laporan">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 05</div>
+        <h2>Laporan &amp; Ringkasan</h2>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Penjualan vs Pembelian per Bulan</h3>
+        <canvas id="chartBulanan"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Produksi per Produk</h3>
+        <canvas id="chartProduksi"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h3>Produk Terlaris (berdasarkan unit terjual)</h3>
+      <table>
+        <thead><tr><th>Produk</th><th class="num">Unit Terjual</th><th class="num">Total Nilai</th></tr></thead>
+        <tbody id="terlarisBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // ---------- DB helpers ----------
+  const DB = {
+    get(key){ try{ return JSON.parse(localStorage.getItem(key)) || []; }catch(e){ return []; } },
+    set(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+  };
+  const KEYS = { beli:'buku_usaha_pembelian', jual:'buku_usaha_penjualan', produksi:'buku_usaha_produksi' };
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function rupiah(n){ return 'Rp ' + Number(n||0).toLocaleString('id-ID'); }
+  function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+  // ---------- Nav ----------
+  document.getElementById('nav').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-target]');
+    if(!btn) return;
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('main section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+    if(btn.dataset.target === 'laporan') renderCharts();
+  });
+
+  // business name persistence
+  const bizInput = document.getElementById('bizName');
+  bizInput.value = localStorage.getItem('buku_usaha_nama') || 'Usaha Saya';
+  bizInput.addEventListener('input', () => localStorage.setItem('buku_usaha_nama', bizInput.value));
+
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  // ---------- Generic render for a table ----------
+  function renderTable(key, tbodyId, emptyId, columns, rowRenderer){
+    const data = DB.get(key).slice().sort((a,b) => b.tanggal.localeCompare(a.tanggal));
+    const tbody = document.getElementById(tbodyId);
+    const empty = document.getElementById(emptyId);
+    tbody.innerHTML = '';
+    if(data.length === 0){ empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    data.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = rowRenderer(item);
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const updated = DB.get(key).filter(x => x.id !== id);
+        DB.set(key, updated);
+        refreshAll();
+      });
+    });
+  }
+
+  function renderPembelian(){
+    renderTable(KEYS.beli, 'pembelianBody', 'pembelianEmpty', null, item => `
+      <td>${item.tanggal}</td>
+      <td>${escapeHtml(item.bahan)}</td>
+      <td class="num">${item.jumlah} ${escapeHtml(item.satuan)}</td>
+      <td class="num">${rupiah(item.harga)}</td>
+      <td class="num">${rupiah(item.total)}</td>
+      <td>${escapeHtml(item.supplier || '—')}</td>
+      <td><button class="del-btn" data-id="${item.id}">Hapus</button></td>
+    `);
+  }
+
+  function renderPenjualan(){
+    renderTable(KEYS.jual, 'penjualanBody', 'penjualanEmpty', null, item => `
+      <td>${item.tanggal}</td>
+      <td>${escapeHtml(item.produk)}</td>
+      <td class="num">${item.jumlah}</td>
+      <td class="num">${rupiah(item.harga)}</td>
+      <td class="num">${rupiah(item.total)}</td>
+      <td>${escapeHtml(item.pelanggan || '—')}</td>
+      <td><button class="del-btn" data-id="${item.id}">Hapus</button></td>
+    `);
+  }
+
+  function renderProduksi(){
+    renderTable(KEYS.produksi, 'produksiBody', 'produksiEmpty', null, item => `
+      <td>${item.tanggal}</td>
+      <td>${escapeHtml(item.produk)}</td>
+      <td class="num">${item.jumlah}</td>
+      <td>${escapeHtml(item.bahan || '—')}</td>
+      <td>${escapeHtml(item.catatan || '—')}</td>
+      <td><button class="del-btn" data-id="${item.id}">Hapus</button></td>
+    `);
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // ---------- Forms ----------
+  document.getElementById('formPembelian').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    const jumlah = parseFloat(f.jumlah.value) || 0;
+    const harga = parseFloat(f.harga.value) || 0;
+    const item = {
+      id: uid(), tanggal: f.tanggal.value, bahan: f.bahan.value,
+      jumlah, satuan: f.satuan.value, harga, total: jumlah * harga,
+      supplier: f.supplier.value
+    };
+    const data = DB.get(KEYS.beli); data.push(item); DB.set(KEYS.beli, data);
+    f.reset(); refreshAll();
+  });
+
+  document.getElementById('formPenjualan').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    const jumlah = parseFloat(f.jumlah.value) || 0;
+    const harga = parseFloat(f.harga.value) || 0;
+    const item = {
+      id: uid(), tanggal: f.tanggal.value, produk: f.produk.value,
+      jumlah, harga, total: jumlah * harga, pelanggan: f.pelanggan.value
+    };
+    const data = DB.get(KEYS.jual); data.push(item); DB.set(KEYS.jual, data);
+    f.reset(); refreshAll();
+  });
+
+  document.getElementById('formProduksi').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    const item = {
+      id: uid(), tanggal: f.tanggal.value, produk: f.produk.value,
+      jumlah: parseFloat(f.jumlah.value) || 0, bahan: f.bahan.value, catatan: f.catatan.value
+    };
+    const data = DB.get(KEYS.produksi); data.push(item); DB.set(KEYS.produksi, data);
+    f.reset(); refreshAll();
+  });
+
+  // default today's date on all date inputs
+  document.querySelectorAll('input[type=date]').forEach(inp => inp.value = todayISO());
+
+  // ---------- Ringkasan ----------
+  function renderRingkasan(){
+    const beli = DB.get(KEYS.beli);
+    const jual = DB.get(KEYS.jual);
+    const produksi = DB.get(KEYS.produksi);
+
+    const totalJual = jual.reduce((s,x) => s + x.total, 0);
+    const totalBeli = beli.reduce((s,x) => s + x.total, 0);
+    const totalProduksi = produksi.reduce((s,x) => s + x.jumlah, 0);
+
+    document.getElementById('statPenjualan').textContent = rupiah(totalJual);
+    document.getElementById('statPembelian').textContent = rupiah(totalBeli);
+    document.getElementById('statLaba').textContent = rupiah(totalJual - totalBeli);
+    document.getElementById('statProduksi').textContent = totalProduksi.toLocaleString('id-ID');
+
+    const activity = [
+      ...beli.map(x => ({ tanggal:x.tanggal, jenis:'Pembelian', ket:x.bahan, nilai:x.total, sign:-1 })),
+      ...jual.map(x => ({ tanggal:x.tanggal, jenis:'Penjualan', ket:x.produk, nilai:x.total, sign:1 })),
+      ...produksi.map(x => ({ tanggal:x.tanggal, jenis:'Produksi', ket:`${x.produk} (${x.jumlah} unit)`, nilai:null, sign:0 })),
+    ].sort((a,b) => b.tanggal.localeCompare(a.tanggal)).slice(0, 10);
+
+    const tbody = document.getElementById('recentBody');
+    tbody.innerHTML = '';
+    if(activity.length === 0){
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">Belum ada aktivitas tercatat.</td></tr>';
+    } else {
+      activity.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${a.tanggal}</td><td>${a.jenis}</td><td>${escapeHtml(a.ket)}</td><td class="num">${a.nilai === null ? '—' : rupiah(a.nilai)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // ---------- Charts ----------
+  let chartBulanan, chartProduksi;
+  function renderCharts(){
+    const beli = DB.get(KEYS.beli);
+    const jual = DB.get(KEYS.jual);
+    const produksi = DB.get(KEYS.produksi);
+
+    // monthly aggregation
+    const months = {};
+    function addMonth(arr, field){
+      arr.forEach(x => {
+        const m = x.tanggal ? x.tanggal.slice(0,7) : 'n/a';
+        months[m] = months[m] || { beli:0, jual:0 };
+        months[m][field] += x.total;
+      });
+    }
+    addMonth(beli, 'beli');
+    addMonth(jual, 'jual');
+    const sortedMonths = Object.keys(months).sort();
+
+    const ctx1 = document.getElementById('chartBulanan');
+    if(chartBulanan) chartBulanan.destroy();
+    chartBulanan = new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: sortedMonths.length ? sortedMonths : ['Belum ada data'],
+        datasets: [
+          { label:'Penjualan', data: sortedMonths.map(m => months[m].jual), backgroundColor:'#c8871e' },
+          { label:'Pembelian', data: sortedMonths.map(m => months[m].beli), backgroundColor:'#223148' }
+        ]
+      },
+      options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, font:{ size:11 } } } }, scales:{ y:{ ticks:{ callback:v=>Number(v).toLocaleString('id-ID') } } } }
+    });
+
+    // production by product
+    const byProduct = {};
+    produksi.forEach(x => { byProduct[x.produk] = (byProduct[x.produk]||0) + x.jumlah; });
+    const labels = Object.keys(byProduct);
+
+    const ctx2 = document.getElementById('chartProduksi');
+    if(chartProduksi) chartProduksi.destroy();
+    chartProduksi = new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: labels.length ? labels : ['Belum ada data'],
+        datasets: [{ data: labels.length ? labels.map(l => byProduct[l]) : [1], backgroundColor:['#c8871e','#223148','#3d5372','#3f6b4a','#a83f3f','#e0a94a'] }]
+      },
+      options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, font:{ size:11 } } } } }
+    });
+
+    // top products
+    const salesByProduct = {};
+    jual.forEach(x => {
+      salesByProduct[x.produk] = salesByProduct[x.produk] || { unit:0, nilai:0 };
+      salesByProduct[x.produk].unit += x.jumlah;
+      salesByProduct[x.produk].nilai += x.total;
+    });
+    const topList = Object.entries(salesByProduct).sort((a,b) => b[1].unit - a[1].unit).slice(0,8);
+    const tbody = document.getElementById('terlarisBody');
+    tbody.innerHTML = '';
+    if(topList.length === 0){
+      tbody.innerHTML = '<tr><td colspan="3" class="empty">Belum ada data penjualan.</td></tr>';
+    } else {
+      topList.forEach(([produk, v]) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(produk)}</td><td class="num">${v.unit.toLocaleString('id-ID')}</td><td class="num">${rupiah(v.nilai)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  function refreshAll(){
+    renderPembelian();
+    renderPenjualan();
+    renderProduksi();
+    renderRingkasan();
+  }
+
+  refreshAll();
+</script>
+
+</body>
+</html>
