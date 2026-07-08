@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Usaha — Pengelolaan Data Internal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<aside>
+  <div class="logo">
+    <span class="mark">§</span>
+    <h1>Buku Usaha</h1>
+  </div>
+  <nav id="nav">
+    <button data-target="ringkasan" class="active"><span class="num">01</span>Ringkasan</button>
+    <button data-target="produk"><span class="num">02</span>Kelola Produk</button>
+    <button data-target="pembelian"><span class="num">03</span>Pembelian</button>
+    <button data-target="stok"><span class="num">04</span>Stok Bahan</button>
+    <button data-target="penjualan"><span class="num">05</span>Penjualan</button>
+    <button data-target="produksi"><span class="num">06</span>Produksi</button>
+    <button data-target="laporan"><span class="num">07</span>Laporan</button>
+  </nav>
+  <div class="biz-name-wrap">
+    <label for="bizName">Nama Usaha</label>
+    <input id="bizName" value="Usaha Saya" />
+  </div>
+</aside>
+
+<main>
+
+  <!-- RINGKASAN -->
+  <section id="ringkasan" class="active">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Dashboard</div>
+        <h2>Ringkasan Usaha</h2>
+      </div>
+      <div class="today mono" id="todayLabel"></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card good">
+        <div class="label">Total Penjualan</div>
+        <div class="value mono" id="statPenjualan">Rp 0</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="label">Total Pembelian</div>
+        <div class="value mono" id="statPembelian">Rp 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Laba Kotor (est.)</div>
+        <div class="value mono" id="statLaba">Rp 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Unit Produksi</div>
+        <div class="value mono" id="statProduksi">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Aktivitas Terbaru</h3>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th class="num">Nilai</th></tr></thead>
+        <tbody id="recentBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- KELOLA PRODUK -->
+  <section id="produk">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 02</div>
+        <h2>Kelola Produk</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Tambah Produk</h3>
+      <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-soft);">
+        Daftarkan produk di sini supaya bisa langsung dipilih saat mencatat Penjualan atau Produksi. Tidak wajib — kalau kamu langsung ketik nama produk baru di form Penjualan/Produksi, produk itu otomatis masuk ke daftar ini juga.
+      </p>
+      <form class="entry-form" id="formProduk">
+        <div class="field"><label>Nama Produk</label><input type="text" name="nama" placeholder="cth. Roti coklat" required></div>
+        <div class="field"><label>Harga Jual Default (opsional)</label><input type="number" step="any" min="0" name="harga" placeholder="0"></div>
+        <div class="field"><label>Satuan (opsional)</label><input type="text" name="satuan" placeholder="pcs / box / kg"></div>
+        <button type="submit">+ Tambah</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>Daftar Produk</h3>
+        <button type="button" class="dl-btn" id="dlProduk">⬇ Excel</button>
+      </div>
+      <table>
+        <thead><tr><th>Nama Produk</th><th class="num">Harga Jual Default</th><th>Satuan</th><th></th></tr></thead>
+        <tbody id="produkBody"></tbody>
+      </table>
+      <div class="empty" id="produkEmpty" style="display:none;">Belum ada produk terdaftar.</div>
+    </div>
+  </section>
+
+  <!-- PEMBELIAN -->
+  <section id="pembelian">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 03</div>
+        <h2>Pembelian &amp; Stok Bahan</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Catat Pembelian Baru</h3>
+      <form id="formPembelian">
+        <div class="entry-form" style="margin-bottom:16px;">
+          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" id="pembelianTanggal" required></div>
+          <div class="field"><label>Supplier (opsional, berlaku utk semua baris)</label><input type="text" name="supplier" id="pembelianSupplier"></div>
+        </div>
+
+        <table id="pembelianRowsTable">
+          <thead>
+            <tr>
+              <th>Nama Bahan</th>
+              <th class="num">Jumlah</th>
+              <th>Satuan</th>
+              <th class="num">Harga/Satuan (Rp)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="pembelianRows"></tbody>
+        </table>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" id="addPembelianRow" class="secondary-btn">+ Tambah Baris</button>
+          <button type="submit">Simpan Semua</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>Riwayat Pembelian</h3>
+        <button type="button" class="dl-btn" id="dlPembelian">⬇ Excel</button>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Bahan</th><th class="num">Jumlah</th><th class="num">Harga/Satuan</th><th class="num">Total</th><th>Supplier</th><th></th></tr></thead>
+        <tbody id="pembelianBody"></tbody>
+      </table>
+      <div class="empty" id="pembelianEmpty" style="display:none;">Belum ada data pembelian.</div>
+    </div>
+  </section>
+
+  <!-- STOK BAHAN -->
+  <section id="stok">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 04</div>
+        <h2>Stok Bahan Baku</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>Posisi Stok Saat Ini</h3>
+        <button type="button" class="dl-btn" id="dlStok">⬇ Excel</button>
+      </div>
+      <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-soft);">
+        Dihitung otomatis: <strong>Stok = Total Pembelian − Total Dipakai Produksi</strong>. Baris merah artinya stok minus (dipakai lebih banyak dari yang dibeli — cek kembali catatanmu).
+      </p>
+      <table>
+        <thead><tr><th>Nama Bahan</th><th>Satuan</th><th class="num">Total Masuk (Beli)</th><th class="num">Total Keluar (Produksi)</th><th class="num">Stok Saat Ini</th></tr></thead>
+        <tbody id="stokBody"></tbody>
+      </table>
+      <div class="empty" id="stokEmpty" style="display:none;">Belum ada data bahan. Catat pembelian dulu di Modul 03.</div>
+    </div>
+  </section>
+
+  <!-- PENJUALAN -->
+  <section id="penjualan">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 05</div>
+        <h2>Penjualan</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Catat Penjualan Baru</h3>
+      <form id="formPenjualan">
+        <div class="entry-form" style="margin-bottom:16px;">
+          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" id="penjualanTanggal" required></div>
+          <div class="field"><label>Pelanggan (opsional, berlaku utk semua baris)</label><input type="text" name="pelanggan" id="penjualanPelanggan"></div>
+        </div>
+
+        <table id="penjualanRowsTable">
+          <thead>
+            <tr>
+              <th>Nama Produk</th>
+              <th class="num">Jumlah</th>
+              <th class="num">Harga/Satuan (Rp)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="penjualanRows"></tbody>
+        </table>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" id="addPenjualanRow" class="secondary-btn">+ Tambah Baris</button>
+          <button type="submit">Simpan Semua</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>Riwayat Penjualan</h3>
+        <button type="button" class="dl-btn" id="dlPenjualan">⬇ Excel</button>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Produk</th><th class="num">Jumlah</th><th class="num">Harga/Satuan</th><th class="num">Total</th><th>Pelanggan</th><th></th></tr></thead>
+        <tbody id="penjualanBody"></tbody>
+      </table>
+      <div class="empty" id="penjualanEmpty" style="display:none;">Belum ada data penjualan.</div>
+    </div>
+  </section>
+
+  <!-- PRODUKSI -->
+  <section id="produksi">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 06</div>
+        <h2>Produksi</h2>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Catat Produksi Baru</h3>
+      <form id="formProduksi">
+        <div class="entry-form" style="margin-bottom:16px;">
+          <div class="field"><label>Tanggal</label><input type="date" name="tanggal" id="produksiTanggal" required></div>
+          <div class="field"><label>Nama Produk</label><input type="text" name="produk" id="produksiProduk" list="produkDatalist" placeholder="cth. Roti coklat" required></div>
+          <div class="field"><label>Jumlah Diproduksi</label><input type="number" step="any" name="jumlah" id="produksiJumlah" min="0" required></div>
+          <div class="field"><label>Catatan (opsional)</label><input type="text" name="catatan" id="produksiCatatan"></div>
+        </div>
+
+        <label style="font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:8px;">Bahan Baku yang Dipakai (opsional)</label>
+        <table id="produksiRowsTable">
+          <thead>
+            <tr>
+              <th>Nama Bahan</th>
+              <th class="num">Jumlah Dipakai</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="produksiRows"></tbody>
+        </table>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button type="button" id="addProduksiRow" class="secondary-btn">+ Tambah Bahan</button>
+          <button type="submit">Simpan Produksi</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>Riwayat Produksi</h3>
+        <button type="button" class="dl-btn" id="dlProduksi">⬇ Excel</button>
+      </div>
+      <table>
+        <thead><tr><th>Tanggal</th><th>Produk</th><th class="num">Jumlah</th><th>Bahan Dipakai</th><th>Catatan</th><th></th></tr></thead>
+        <tbody id="produksiBody"></tbody>
+      </table>
+      <div class="empty" id="produksiEmpty" style="display:none;">Belum ada data produksi.</div>
+    </div>
+  </section>
+
+  <!-- LAPORAN -->
+  <section id="laporan">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Modul 07</div>
+        <h2>Laporan &amp; Ringkasan</h2>
+      </div>
+      <button type="button" class="dl-btn big" id="dlSemua">⬇ Unduh Semua Data (Excel)</button>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Penjualan vs Pembelian per Bulan</h3>
+        <canvas id="chartBulanan"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Produksi per Produk</h3>
+        <canvas id="chartProduksi"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h3>Produk Terlaris (berdasarkan unit terjual)</h3>
+      <table>
+        <thead><tr><th>Produk</th><th class="num">Unit Terjual</th><th class="num">Total Nilai</th></tr></thead>
+        <tbody id="terlarisBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<datalist id="bahanDatalist"></datalist>
+<datalist id="produkDatalist"></datalist>
+
+<!--
+  Urutan pemuatan skrip PENTING: setiap file mengasumsikan fungsi dari
+  file-file sebelumnya sudah tersedia secara global (tidak pakai ES module
+  supaya file bisa dibuka langsung lewat file:// tanpa server lokal).
+
+  1. db.js        - lapisan data & helper dasar (dipakai semua modul lain)
+  2. produk.js     - katalog produk (dipakai oleh penjualan.js & produksi.js)
+  3. pembelian.js  - form & tabel pembelian
+  4. stok.js       - hitung stok dari pembelian + produksi (dipakai produksi.js & export.js)
+  5. penjualan.js  - form & tabel penjualan
+  6. produksi.js   - form & tabel produksi (butuh stok.js untuk cek stok)
+  7. ringkasan.js  - kartu statistik dashboard
+  8. laporan.js    - grafik & tabel produk terlaris
+  9. export.js     - tombol unduh Excel per modul & gabungan
+  10. app.js        - navigasi + refreshAll() + pemanggilan awal (WAJIB TERAKHIR)
+-->
+<script src="js/db.js"></script>
+<script src="js/produk.js"></script>
+<script src="js/pembelian.js"></script>
+<script src="js/stok.js"></script>
+<script src="js/penjualan.js"></script>
+<script src="js/produksi.js"></script>
+<script src="js/ringkasan.js"></script>
+<script src="js/laporan.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
