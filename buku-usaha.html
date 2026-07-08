@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --paper: #f6f1e6;
@@ -229,6 +230,41 @@
     margin-bottom:14px;
     color:var(--navy);
   }
+
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .card-head h3{margin-bottom:0;}
+
+  .dl-btn{
+    all:unset;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:var(--white);
+    color:var(--green);
+    border:1px solid var(--green);
+    border-radius:7px;
+    padding:6px 12px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    transition:background 0.15s ease;
+  }
+  .dl-btn:hover{background:rgba(63,107,74,0.08);}
+
+  .dl-btn.big{
+    border-color:var(--amber);
+    color:var(--amber);
+    padding:10px 16px;
+    font-size:12px;
+  }
+  .dl-btn.big:hover{background:rgba(200,135,30,0.08);}
 
   form.entry-form{
     display:grid;
@@ -481,7 +517,10 @@
     </div>
 
     <div class="card">
-      <h3>Daftar Produk</h3>
+      <div class="card-head">
+        <h3>Daftar Produk</h3>
+        <button type="button" class="dl-btn" id="dlProduk">⬇ Excel</button>
+      </div>
       <table>
         <thead><tr><th>Nama Produk</th><th class="num">Harga Jual Default</th><th>Satuan</th><th></th></tr></thead>
         <tbody id="produkBody"></tbody>
@@ -528,7 +567,10 @@
     </div>
 
     <div class="card">
-      <h3>Riwayat Pembelian</h3>
+      <div class="card-head">
+        <h3>Riwayat Pembelian</h3>
+        <button type="button" class="dl-btn" id="dlPembelian">⬇ Excel</button>
+      </div>
       <table>
         <thead><tr><th>Tanggal</th><th>Bahan</th><th class="num">Jumlah</th><th class="num">Harga/Satuan</th><th class="num">Total</th><th>Supplier</th><th></th></tr></thead>
         <tbody id="pembelianBody"></tbody>
@@ -547,7 +589,10 @@
     </div>
 
     <div class="card">
-      <h3>Posisi Stok Saat Ini</h3>
+      <div class="card-head">
+        <h3>Posisi Stok Saat Ini</h3>
+        <button type="button" class="dl-btn" id="dlStok">⬇ Excel</button>
+      </div>
       <p style="margin:0 0 14px; font-size:12.5px; color:var(--ink-soft);">
         Dihitung otomatis: <strong>Stok = Total Pembelian − Total Dipakai Produksi</strong>. Baris merah artinya stok minus (dipakai lebih banyak dari yang dibeli — cek kembali catatanmu).
       </p>
@@ -596,7 +641,10 @@
     </div>
 
     <div class="card">
-      <h3>Riwayat Penjualan</h3>
+      <div class="card-head">
+        <h3>Riwayat Penjualan</h3>
+        <button type="button" class="dl-btn" id="dlPenjualan">⬇ Excel</button>
+      </div>
       <table>
         <thead><tr><th>Tanggal</th><th>Produk</th><th class="num">Jumlah</th><th class="num">Harga/Satuan</th><th class="num">Total</th><th>Pelanggan</th><th></th></tr></thead>
         <tbody id="penjualanBody"></tbody>
@@ -644,7 +692,10 @@
     </div>
 
     <div class="card">
-      <h3>Riwayat Produksi</h3>
+      <div class="card-head">
+        <h3>Riwayat Produksi</h3>
+        <button type="button" class="dl-btn" id="dlProduksi">⬇ Excel</button>
+      </div>
       <table>
         <thead><tr><th>Tanggal</th><th>Produk</th><th class="num">Jumlah</th><th>Bahan Dipakai</th><th>Catatan</th><th></th></tr></thead>
         <tbody id="produksiBody"></tbody>
@@ -660,6 +711,7 @@
         <div class="eyebrow">Modul 07</div>
         <h2>Laporan &amp; Ringkasan</h2>
       </div>
+      <button type="button" class="dl-btn big" id="dlSemua">⬇ Unduh Semua Data (Excel)</button>
     </div>
 
     <div class="chart-grid">
@@ -1212,6 +1264,100 @@
     renderStok();
     renderRingkasan();
   }
+
+  // ---------- Export ke Excel ----------
+  function downloadExcel(rows, filename, sheetName){
+    if(!rows || rows.length === 0){
+      alert('Belum ada data untuk diunduh di bagian ini.');
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, (sheetName || 'Data').slice(0,31));
+    XLSX.writeFile(wb, filename);
+  }
+
+  function rowsProduk(){
+    return DB.get(KEYS.produk).slice().sort((a,b) => a.nama.localeCompare(b.nama)).map(p => ({
+      'Nama Produk': p.nama,
+      'Harga Jual Default': p.harga || 0,
+      'Satuan': p.satuan || ''
+    }));
+  }
+
+  function rowsPembelian(){
+    return DB.get(KEYS.beli).slice().sort((a,b) => a.tanggal.localeCompare(b.tanggal)).map(x => ({
+      'Tanggal': x.tanggal,
+      'Bahan': x.bahan,
+      'Jumlah': x.jumlah,
+      'Satuan': x.satuan,
+      'Harga per Satuan': x.harga,
+      'Total': x.total,
+      'Supplier': x.supplier || ''
+    }));
+  }
+
+  function rowsStok(){
+    const stok = computeStok();
+    return Object.values(stok).sort((a,b) => a.nama.localeCompare(b.nama)).map(s => ({
+      'Nama Bahan': s.nama,
+      'Satuan': s.satuan || '',
+      'Total Masuk (Beli)': s.masuk,
+      'Total Keluar (Produksi)': s.keluar,
+      'Stok Saat Ini': s.stok
+    }));
+  }
+
+  function rowsPenjualan(){
+    return DB.get(KEYS.jual).slice().sort((a,b) => a.tanggal.localeCompare(b.tanggal)).map(x => ({
+      'Tanggal': x.tanggal,
+      'Produk': x.produk,
+      'Jumlah': x.jumlah,
+      'Harga per Satuan': x.harga,
+      'Total': x.total,
+      'Pelanggan': x.pelanggan || ''
+    }));
+  }
+
+  function rowsProduksi(){
+    return DB.get(KEYS.produksi).slice().sort((a,b) => a.tanggal.localeCompare(b.tanggal)).map(x => ({
+      'Tanggal': x.tanggal,
+      'Produk': x.produk,
+      'Jumlah Diproduksi': x.jumlah,
+      'Bahan Dipakai': (x.bahanDipakai || []).map(b => `${b.bahan} (${b.jumlah})`).join(', '),
+      'Catatan': x.catatan || ''
+    }));
+  }
+
+  document.getElementById('dlProduk').addEventListener('click', () => downloadExcel(rowsProduk(), 'daftar-produk.xlsx', 'Produk'));
+  document.getElementById('dlPembelian').addEventListener('click', () => downloadExcel(rowsPembelian(), 'riwayat-pembelian.xlsx', 'Pembelian'));
+  document.getElementById('dlStok').addEventListener('click', () => downloadExcel(rowsStok(), 'stok-bahan.xlsx', 'Stok Bahan'));
+  document.getElementById('dlPenjualan').addEventListener('click', () => downloadExcel(rowsPenjualan(), 'riwayat-penjualan.xlsx', 'Penjualan'));
+  document.getElementById('dlProduksi').addEventListener('click', () => downloadExcel(rowsProduksi(), 'riwayat-produksi.xlsx', 'Produksi'));
+
+  document.getElementById('dlSemua').addEventListener('click', () => {
+    const sheets = [
+      { name: 'Produk', rows: rowsProduk() },
+      { name: 'Pembelian', rows: rowsPembelian() },
+      { name: 'Stok Bahan', rows: rowsStok() },
+      { name: 'Penjualan', rows: rowsPenjualan() },
+      { name: 'Produksi', rows: rowsProduksi() }
+    ];
+    const wb = XLSX.utils.book_new();
+    let adaData = false;
+    sheets.forEach(s => {
+      const rows = s.rows.length ? s.rows : [{ 'Keterangan': 'Belum ada data' }];
+      if(s.rows.length) adaData = true;
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, s.name.slice(0,31));
+    });
+    if(!adaData){
+      alert('Belum ada data sama sekali untuk diunduh.');
+      return;
+    }
+    const bizName = (localStorage.getItem('buku_usaha_nama') || 'usaha').trim().replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    XLSX.writeFile(wb, `data-${bizName || 'usaha'}-${todayISO()}.xlsx`);
+  });
 
   refreshAll();
 </script>
